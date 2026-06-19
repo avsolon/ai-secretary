@@ -1,0 +1,16 @@
+aiogram==3.18.0
+python-dotenv==1.1.0
+sentence-transformers==3.4.1
+faiss-cpu==1.9.0.post1
+numpy==2.2.4
+openai==1.68.2
+google-api-python-client==2.160.0
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.1
+PyPDF2==0.4.0
+python-docx==1.1.2
+pypandoc==1.15
+aiofiles==24.1.0
+pydantic==2.10.5
+pydantic-settings==2.7.1
+httpx==0.28.1
