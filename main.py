@@ -3,6 +3,7 @@ import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
+from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.enums import ParseMode
 
 from config import config
@@ -32,8 +33,10 @@ async def main():
     rag = RAGPipeline(config, vector_store, embedding_provider)
     logger.info("RAG pipeline initialized")
 
+    session = AiohttpSession(proxy=config.TG_PROXY) if config.TG_PROXY else None
     bot = Bot(
         token=config.BOT_TOKEN,
+        session=session,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
     dp = Dispatcher()

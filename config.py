@@ -12,6 +12,7 @@ class Config:
     # Telegram
     BOT_TOKEN: str = os.getenv("BOT_TOKEN", "")
     ADMIN_IDS: List[int] = field(default_factory=lambda: [int(i) for i in os.getenv("ADMIN_IDS", "").split(",") if i])
+    TG_PROXY: str = os.getenv("TG_PROXY", "")
 
     # LLM Provider: openai, gigachat, yandex, ollama
     LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "gigachat")
