@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import List
 
 import numpy as np
@@ -16,8 +17,10 @@ class EmbeddingProvider:
         if self._model is not None:
             return self._model
         from sentence_transformers import SentenceTransformer
-        logger.info("Loading sentence-transformer model: %s", self.config.EMBEDDING_MODEL)
-        self._model = SentenceTransformer(self.config.EMBEDDING_MODEL)
+        cache = os.environ.get("HF_HOME", "") or os.environ.get("SENTENCE_TRANSFORMERS_HOME", "")
+        kwargs = {"cache_folder": cache} if cache else {}
+        logger.info("Loading sentence-transformer model: %s (cache=%s)", self.config.EMBEDDING_MODEL, cache or "default")
+        self._model = SentenceTransformer(self.config.EMBEDDING_MODEL, **kwargs)
         return self._model
 
     def _get_ollama_client(self):

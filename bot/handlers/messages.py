@@ -77,7 +77,12 @@ def register(dp, rag, config, bot):
             await finalize_booking(message, state, booking, config, bot)
             return
 
-        intent = rag.detect_intent(text)
+        try:
+            intent = rag.detect_intent(text)
+        except Exception as e:
+            logger.error("Intent detection failed: %s", e)
+            intent = "question"
+
         logger.info("Detected intent: %s for user %d", intent, user_id)
 
         if intent == "booking":
@@ -106,5 +111,10 @@ def register(dp, rag, config, bot):
             )
             return
 
-        answer = rag.answer(text)
+        try:
+            answer = rag.answer(text)
+        except Exception as e:
+            logger.error("RAG answer generation failed: %s", e)
+            answer = "Извините, произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже или свяжитесь с менеджером."
+
         await message.answer(answer, reply_markup=main_menu_kb())

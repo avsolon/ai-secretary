@@ -1,5 +1,9 @@
 import asyncio
 import logging
+import os
+
+# Set HF cache to a location with enough space
+os.environ.setdefault("HF_HOME", "/opt/goinfre/ayeshacy/.cache/huggingface")
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties

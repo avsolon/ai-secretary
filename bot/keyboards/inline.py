@@ -82,7 +82,7 @@ def admin_services_kb(services: list) -> InlineKeyboardMarkup:
 def cancel_kb() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text="◀️ Отмена", callback_data="booking_cancel")
-    return builder.as_markup().as_markup(resize_keyboard=True)
+    return builder.as_markup()
 
 
 def escalate_kb() -> InlineKeyboardMarkup:

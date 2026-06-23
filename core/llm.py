@@ -11,6 +11,7 @@ class LLMClient:
     def __init__(self, config):
         self.config = config
         self._provider = config.LLM_PROVIDER
+        self._gigachat_http = httpx.Client(verify=False, timeout=60)
 
     def generate(self, prompt: str, system_prompt: Optional[str] = None, temperature: float = 0.3) -> str:
         if self._provider == "openai":
@@ -45,7 +46,7 @@ class LLMClient:
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
-        resp = httpx.post(
+        resp = self._gigachat_http.post(
             "https://gigachat.devices.sberbank.ru/api/v1/chat/completions",
             headers={
                 "Authorization": f"Bearer {auth_token}",
@@ -57,7 +58,6 @@ class LLMClient:
                 "messages": messages,
                 "temperature": temperature,
             },
-            timeout=60,
         )
         resp.raise_for_status()
         data = resp.json()
@@ -65,7 +65,7 @@ class LLMClient:
 
     def _get_gigachat_token(self) -> str:
         import uuid
-        resp = httpx.post(
+        resp = self._gigachat_http.post(
             "https://ngw.devices.sberbank.ru:9443/api/v2/oauth",
             headers={
                 "Authorization": f"Basic {self.config.GIGACHAT_CREDENTIALS}",
@@ -74,8 +74,6 @@ class LLMClient:
                 "Accept": "application/json",
             },
             data={"scope": self.config.GIGACHAT_SCOPE},
-            timeout=30,
-            verify=False,
         )
         resp.raise_for_status()
         return resp.json()["access_token"]

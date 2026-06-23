@@ -1,0 +1,10 @@
+2026-06-23 19:54:33 | INFO     | __main__:main:25 | Starting AI Secretary Bot...
+2026-06-23 19:54:33 | INFO     | db.database:init_db:89 | Database initialized at data/bot.db
+2026-06-23 19:54:33 | INFO     | __main__:main:28 | Database initialized
+2026-06-23 19:54:33 | INFO     | __main__:main:31 | Embedding provider initialized
+2026-06-23 19:54:33 | INFO     | core.vector_store:initialize:31 | Loaded existing FAISS index with 230 documents
+2026-06-23 19:54:33 | INFO     | __main__:main:35 | Vector store initialized
+2026-06-23 19:54:33 | INFO     | __main__:main:38 | RAG pipeline initialized
+2026-06-23 19:54:33 | INFO     | __main__:main:50 | Starting polling...
+2026-06-23 19:54:33 | INFO     | aiogram.dispatcher:start_polling:527 | Start polling
+2026-06-23 19:54:34 | INFO     | aiogram.dispatcher:_polling:341 | Run polling for bot @test_akbnsk_bot id=8366744563 - 'AKBNSK.RU - интернет магазин'

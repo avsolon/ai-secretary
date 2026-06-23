@@ -1,4 +1,3 @@
-import re
 from typing import List
 
 
@@ -11,27 +10,20 @@ def chunk_text(text: str, chunk_size: int = 512, overlap: int = 64) -> List[str]
     chunks = []
     start = 0
     text_len = len(text)
+    step = chunk_size - overlap
+    if step <= 0:
+        step = chunk_size // 2
+
     while start < text_len:
         end = min(start + chunk_size, text_len)
-        if end < text_len:
-            split_pos = _find_split_point(text[start:end])
-            if split_pos:
-                end = start + split_pos
-        chunks.append(text[start:end].strip())
-        start = end - overlap if end < text_len else text_len
-        if start < 0:
-            start = 0
-    return [c for c in chunks if c]
+        chunk = text[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
+        if end >= text_len:
+            break
+        start += step
 
-
-def _find_split_point(text: str) -> int:
-    for pattern in [r'\n\n+', r'\n', r'\. ', r'\! ', r'\? ', r', ', r' ']:
-        matches = list(re.finditer(pattern, text))
-        if matches:
-            match = matches[-1]
-            if match.end() < len(text) * 0.8:
-                return match.end()
-    return 0
+    return chunks
 
 
 def extract_text_from_file(file_path: str) -> str:
@@ -49,11 +41,11 @@ def extract_text_from_file(file_path: str) -> str:
 
 def _extract_pdf_text(file_path: str) -> str:
     try:
-        from PyPDF2 import PdfReader
+        from pypdf import PdfReader
         reader = PdfReader(file_path)
         return "\n".join(page.extract_text() or "" for page in reader.pages)
     except ImportError:
-        raise ImportError("PyPDF2 required for PDF extraction")
+        raise ImportError("pypdf required for PDF extraction")
 
 
 def _extract_docx_text(file_path: str) -> str:

@@ -4,7 +4,7 @@ from typing import Optional, List, Dict, Any
 
 @dataclass
 class BookingSession:
-    user_id: int
+    user_id: int = 0
     state: str = "idle"
     service: Optional[str] = None
     services: List[str] = field(default_factory=list)
