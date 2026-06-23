@@ -25,3 +25,7 @@ data/google_token.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Scratch / unrelated
+akbnsk_products.json
+akbnsk_scraper.py
