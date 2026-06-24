@@ -29,8 +29,5 @@ def register(dp, config, bot):
             "расскажу о ценах и наличии.\n\n"
             "Просто напишите, что вас интересует, или используйте кнопки внизу."
         )
-        if is_admin:
-            welcome += "\n\n🔑 Панель администратора — нажмите кнопку внизу."
-            await message.answer(welcome, reply_markup=admin_reply_kb())
-        else:
-            await message.answer(welcome, reply_markup=main_reply_kb())
+        kb = admin_reply_kb() if is_admin else main_reply_kb()
+        await message.answer(welcome, reply_markup=kb)

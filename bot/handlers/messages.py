@@ -183,6 +183,15 @@ def register(dp, rag, config, bot):
             )
             return
 
+        # Simple greeting - short response without products
+        greetings = ["привет", "здравствуй", "здрасти", "хай", "hello", "hi", "добрый день", "доброе утро", "добрый вечер"]
+        if text.lower().strip() in greetings or text.lower().strip().rstrip("!.,") in greetings:
+            await message.answer(
+                f"Здравствуйте! Чем могу помочь? Подскажите, какой аккумулятор вас интересует.",
+                reply_markup=bottom_kb,
+            )
+            return
+
         if intent == "booking":
             services = crud.get_services(config.DB_PATH)
             if services:
