@@ -1,6 +1,8 @@
+import asyncio
 import logging
 
 from aiogram import types
+from aiogram.enums import ChatAction
 from aiogram.fsm.context import FSMContext
 
 from bot.keyboards.inline import cancel_kb, escalate_kb, services_kb
@@ -11,6 +13,15 @@ from models.session import BookingSession
 logger = logging.getLogger(__name__)
 
 BOTTOM_KB = None
+
+
+async def _keep_typing(bot, chat_id: int):
+    for _ in range(5):
+        await asyncio.sleep(4)
+        try:
+            await bot.send_chat_action(chat_id=chat_id, action=ChatAction.TYPING)
+        except Exception:
+            break
 
 
 def register(dp, rag, config, bot):
@@ -33,6 +44,10 @@ def register(dp, rag, config, bot):
 
         # Determine bottom keyboard
         bottom_kb = admin_reply_kb() if is_admin else main_reply_kb()
+
+        # Show typing indicator
+        await bot.send_chat_action(chat_id=user_id, action=ChatAction.TYPING)
+        asyncio.create_task(_keep_typing(bot, user_id))
 
         # Handle bottom menu buttons
         if text == "🔍 Подобрать аккумулятор":
