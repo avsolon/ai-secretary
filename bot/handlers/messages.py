@@ -2,13 +2,15 @@ import logging
 
 from aiogram import types
 from aiogram.fsm.context import FSMContext
-from aiogram.types import ReplyKeyboardRemove
 
-from bot.keyboards.inline import main_menu_kb, cancel_kb, escalate_kb
+from bot.keyboards.inline import cancel_kb, escalate_kb, services_kb
+from bot.keyboards.reply import main_reply_kb, admin_reply_kb, admin_panel_reply_kb, remove_kb
 from db import crud
 from models.session import BookingSession
 
 logger = logging.getLogger(__name__)
+
+BOTTOM_KB = None
 
 
 def register(dp, rag, config, bot):
@@ -18,18 +20,104 @@ def register(dp, rag, config, bot):
         text = message.text.strip()
         logger.info("Message from %d: %s", user_id, text[:100])
 
+        is_admin = user_id in config.ADMIN_IDS
+
         crud.create_user(
             config.DB_PATH,
             telegram_id=user_id,
             username=message.from_user.username,
             first_name=message.from_user.first_name,
             last_name=message.from_user.last_name,
+            is_admin=is_admin,
         )
+
+        # Determine bottom keyboard
+        bottom_kb = admin_reply_kb() if is_admin else main_reply_kb()
+
+        # Handle bottom menu buttons
+        if text == "🔍 Подобрать аккумулятор":
+            await message.answer(
+                "Напишите, какой аккумулятор вам нужен. Например:\n"
+                "• «60 ампер обратная»\n"
+                "• «аккумулятор для легковушки до 5000»\n"
+                "• «BOSCH 70 ач»",
+                reply_markup=bottom_kb,
+            )
+            return
+
+        if text == "📞 Контакты":
+            answer = rag.answer("какие контакты магазина")
+            await message.answer(answer, reply_markup=bottom_kb)
+            return
+
+        if text == "❓ Часто задаваемые вопросы":
+            await message.answer(
+                "Я могу помочь:\n"
+                "• Подобрать аккумулятор по параметрам\n"
+                "• Рассказать о ценах и наличии\n"
+                "• Показать контакты магазина\n\n"
+                "Просто напишите ваш вопрос!",
+                reply_markup=bottom_kb,
+            )
+            return
+
+        if text == "🔑 Админ панель" and is_admin:
+            await message.answer(
+                "🔑 Панель администратора",
+                reply_markup=admin_panel_reply_kb(),
+            )
+            return
+
+        if text == "◀️ Назад в главное меню" and is_admin:
+            await message.answer("Главное меню", reply_markup=bottom_kb)
+            return
+
+        # Admin panel actions
+        if text == "📄 Загрузить документ" and is_admin:
+            await message.answer("Отправьте файл PDF, DOCX или TXT для загрузки в базу знаний.", reply_markup=admin_panel_reply_kb())
+            return
+
+        if text == "📚 Список документов" and is_admin:
+            docs = crud.get_documents(config.DB_PATH)
+            if docs:
+                reply = "📚 Документы в базе знаний:\n\n" + "\n".join(f"• {d['filename']} — {d['chunks_count']} фрагментов" for d in docs)
+            else:
+                reply = "📚 В базе знаний пока нет документов."
+            await message.answer(reply, reply_markup=admin_panel_reply_kb())
+            return
+
+        if text == "🔄 Перестроить индекс" and is_admin:
+            await message.answer("🔄 Функция перестроения индекса запускается через админ-панель в Telegram. Пока что индекс создаётся автоматически при загрузке документов.", reply_markup=admin_panel_reply_kb())
+            return
+
+        if text == "📅 Записи на сегодня" and is_admin:
+            import datetime
+            today = datetime.date.today().isoformat()
+            apps = crud.get_appointments(config.DB_PATH, today)
+            if apps:
+                reply = f"📅 Записи на сегодня ({today}):\n\n" + "\n\n".join(
+                    f"• {a['start_time']} - {a['end_time']}: {a['service_name']}\n  Клиент: {a.get('client_name', 'Не указан')}"
+                    for a in apps
+                )
+            else:
+                reply = f"📅 На сегодня ({today}) записей нет."
+            await message.answer(reply, reply_markup=admin_panel_reply_kb())
+            return
+
+        if text == "⚙️ Управление услугами" and is_admin:
+            services = crud.get_services(config.DB_PATH)
+            if services:
+                reply = "⚙️ Услуги:\n\n" + "\n".join(f"• {s['name']} ({s.get('duration_minutes',60)} мин)" for s in services)
+            else:
+                reply = "⚙️ Услуги пока не добавлены."
+            await message.answer(reply, reply_markup=admin_panel_reply_kb())
+            return
 
         data = await state.get_data()
         booking = BookingSession(**data.get("booking", {}))
         booking.user_id = user_id
 
+        # Booking FSM
         if booking.state == "awaiting_service":
             booking.service = text
             booking.state = "awaiting_date"
@@ -77,6 +165,7 @@ def register(dp, rag, config, bot):
             await finalize_booking(message, state, booking, config, bot)
             return
 
+        # Intent detection & RAG
         try:
             intent = rag.detect_intent(text)
         except Exception as e:
@@ -88,7 +177,6 @@ def register(dp, rag, config, bot):
         if intent == "booking":
             services = crud.get_services(config.DB_PATH)
             if services:
-                from bot.keyboards.inline import services_kb
                 booking.state = "idle"
                 await state.update_data(booking=booking.__dict__)
                 await message.answer(
@@ -115,6 +203,6 @@ def register(dp, rag, config, bot):
             answer = rag.answer(text)
         except Exception as e:
             logger.error("RAG answer generation failed: %s", e)
-            answer = "Извините, произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже или свяжитесь с менеджером."
+            answer = "Извините, произошла ошибка. Попробуйте ещё раз или напишите по-другому."
 
-        await message.answer(answer, reply_markup=main_menu_kb())
+        await message.answer(answer, reply_markup=bottom_kb)

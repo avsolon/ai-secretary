@@ -14,12 +14,20 @@ def get_user(db_path: str, telegram_id: int) -> Optional[Dict[str, Any]]:
 
 
 def create_user(db_path: str, telegram_id: int, username: str = None,
-                first_name: str = None, last_name: str = None) -> Dict[str, Any]:
+                first_name: str = None, last_name: str = None,
+                is_admin: bool = False) -> Dict[str, Any]:
     conn = get_connection(db_path)
+    existing = get_user(db_path, telegram_id)
+    if existing:
+        if existing.get("is_admin") != is_admin:
+            conn.execute("UPDATE users SET is_admin = ?, updated_at = CURRENT_TIMESTAMP WHERE telegram_id = ?",
+                         (int(is_admin), telegram_id))
+            conn.commit()
+        return get_user(db_path, telegram_id)
     conn.execute(
-        """INSERT OR IGNORE INTO users (telegram_id, username, first_name, last_name)
-           VALUES (?, ?, ?, ?)""",
-        (telegram_id, username, first_name, last_name),
+        """INSERT INTO users (telegram_id, username, first_name, last_name, is_admin)
+           VALUES (?, ?, ?, ?, ?)""",
+        (telegram_id, username, first_name, last_name, int(is_admin)),
     )
     conn.commit()
     return get_user(db_path, telegram_id)
