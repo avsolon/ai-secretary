@@ -174,6 +174,15 @@ def register(dp, rag, config, bot):
 
         logger.info("Detected intent: %s for user %d", intent, user_id)
 
+        # Forbidden topics - short hardcoded response
+        forbidden = ["политик", "религи", "секс", "поз", "трах", "любов", "отношени", "президент", "войн", "попа", "член"]
+        if any(kw in text.lower() for kw in forbidden):
+            await message.answer(
+                "Мы продаём аккумуляторы. По этому вопросу ничем не помогу.",
+                reply_markup=bottom_kb,
+            )
+            return
+
         if intent == "booking":
             services = crud.get_services(config.DB_PATH)
             if services:
@@ -193,10 +202,15 @@ def register(dp, rag, config, bot):
             return
 
         if intent == "escalate":
-            await message.answer(
-                "Хотите, чтобы я передал ваш вопрос менеджеру?",
-                reply_markup=escalate_kb(),
-            )
+            contact_keywords = ["как связать", "как позвонить", "как написать", "контакт", "телефон", "email"]
+            if any(kw in text.lower() for kw in contact_keywords):
+                answer = rag.answer("какие контакты магазина")
+                await message.answer(answer, reply_markup=bottom_kb)
+            else:
+                await message.answer(
+                    "Хотите, чтобы я передал ваш вопрос менеджеру?",
+                    reply_markup=escalate_kb(),
+                )
             return
 
         try:

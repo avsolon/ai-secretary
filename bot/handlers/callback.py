@@ -366,8 +366,7 @@ async def escalate_to_manager(callback: types.CallbackQuery, booking: BookingSes
             await bot.send_message(
                 admin_id,
                 f"📞 <b>Запрос на связь с менеджером</b>\n\n"
-                f"От пользователя: @{callback.from_user.username or callback.from_user.first_name}\n"
-                f"ID: {callback.from_user.id}\n\n"
+                f"От: @{callback.from_user.username or callback.from_user.first_name}\n\n"
                 f"Сообщение: {callback.message.text or '—'}",
             )
         except Exception as e:
